@@ -1,0 +1,906 @@
+
+
+<!DOCTYPE html>
+<html lang="en" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="HCQ">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="前言内存是计算机中一种需要认真管理的重要资源；经过多年的探索，人们提出了分层存储器体系的概念;   无存储器抽象最简单的存储器抽象就是根本没有抽象。在早期的大型计算机时代，就没有存储器抽象，每一个程序都直接访问内存，因为要共用内存地址，所以无法同时运行两个程序；  无存储器抽象下有运行多个程序交换即把当前内存中的所有内容保存在磁盘文件，然后把下一个程序读入内存中再运行即可。 这样某一个时间内存中只">
+<meta property="og:type" content="article">
+<meta property="og:title" content="内存管理">
+<meta property="og:url" content="https://hfate.github.io/2022/12/09/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/index.html">
+<meta property="og:site_name" content="Pepsi OutMan">
+<meta property="og:description" content="前言内存是计算机中一种需要认真管理的重要资源；经过多年的探索，人们提出了分层存储器体系的概念;   无存储器抽象最简单的存储器抽象就是根本没有抽象。在早期的大型计算机时代，就没有存储器抽象，每一个程序都直接访问内存，因为要共用内存地址，所以无法同时运行两个程序；  无存储器抽象下有运行多个程序交换即把当前内存中的所有内容保存在磁盘文件，然后把下一个程序读入内存中再运行即可。 这样某一个时间内存中只">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://hcqpic.oss-cn-shanghai.aliyuncs.com/src%3Dhttp___upload-images.jianshu.io_upload_images_870531-72afe43f349605ab.png%26refer%3Dhttp___upload-images.jianshu.jpg">
+<meta property="og:image" content="https://hcqpic.oss-cn-shanghai.aliyuncs.com/src%3Dhttp___www.pianshen.com_images_782_ec6e2813d7f1557cf46ce9312eb1e236.png%26refer%3Dhttp___www.pianshen.jpg">
+<meta property="og:image" content="https://hcqpic.oss-cn-shanghai.aliyuncs.com/5e146d9cbc2edb31bed70512d4655033.gif">
+<meta property="og:image" content="https://hcqpic.oss-cn-shanghai.aliyuncs.com/u%3D1953053099%2C3134654399%26fm%3D253%26fmt%3Dauto%26app%3D120%26f%3DPNG.webp">
+<meta property="og:image" content="https://hcqpic.oss-cn-shanghai.aliyuncs.com/9213b07eca8065380382c7f494dda144ac3482e8.png">
+<meta property="og:image" content="https://hcqpic.oss-cn-shanghai.aliyuncs.com/20180111231317615.png">
+<meta property="og:image" content="https://hcqpic.oss-cn-shanghai.aliyuncs.com/125432206%20%281%29.jpg">
+<meta property="og:image" content="https://hcqpic.oss-cn-shanghai.aliyuncs.com/wKioL1l6vk7DZI_TAAAynwGcvmQ133.jpg">
+<meta property="og:image" content="https://hcqpic.oss-cn-shanghai.aliyuncs.com/252137255185626.jpg">
+<meta property="og:image" content="https://hcqpic.oss-cn-shanghai.aliyuncs.com/%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87_20220112234601.png">
+<meta property="og:image" content="https://hcqpic.oss-cn-shanghai.aliyuncs.com/%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87_20220112234959.png">
+<meta property="article:published_time" content="2022-12-09T14:07:42.000Z">
+<meta property="article:modified_time" content="2023-07-14T17:59:40.642Z">
+<meta property="article:author" content="HCQ">
+<meta property="article:tag" content="操作系统">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://hcqpic.oss-cn-shanghai.aliyuncs.com/src%3Dhttp___upload-images.jianshu.io_upload_images_870531-72afe43f349605ab.png%26refer%3Dhttp___upload-images.jianshu.jpg">
+  
+  
+  
+  <title>内存管理 - Pepsi OutMan</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"hfate.github.io","root":"/","version":"1.9.3","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>HCQ</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                Home
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                Archives
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                Categories
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                Tags
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                About
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="内存管理"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-12-09 14:07" pubdate>
+          December 9, 2022 pm
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          <!-- compatible with older versions-->
+          7k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          <!-- compatible with older versions-->
+          59 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">内存管理</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><pre><code class="hljs">内存是计算机中一种需要认真管理的重要资源；经过多年的探索，人们提出了分层存储器体系的概念;
+</code></pre>
+<p><img src="https://hcqpic.oss-cn-shanghai.aliyuncs.com/src%3Dhttp___upload-images.jianshu.io_upload_images_870531-72afe43f349605ab.png%26refer%3Dhttp___upload-images.jianshu.jpg" srcset="/img/loading.gif" lazyload></p>
+<h2 id="无存储器抽象"><a href="#无存储器抽象" class="headerlink" title="无存储器抽象"></a>无存储器抽象</h2><pre><code class="hljs">最简单的存储器抽象就是根本没有抽象。在早期的大型计算机时代，就没有存储器抽象，每一个程序都直接访问内存，因为要共用内存地址，所以无法同时运行两个程序；
+</code></pre>
+<h3 id="无存储器抽象下有运行多个程序"><a href="#无存储器抽象下有运行多个程序" class="headerlink" title="无存储器抽象下有运行多个程序"></a>无存储器抽象下有运行多个程序</h3><h4 id="交换"><a href="#交换" class="headerlink" title="交换"></a>交换</h4><pre><code class="hljs">即把当前内存中的所有内容保存在磁盘文件，然后把下一个程序读入内存中再运行即可。
+这样某一个时间内存中只有一个程序，那么就不会发生冲突
+</code></pre>
+<h4 id="保护键"><a href="#保护键" class="headerlink" title="保护键"></a>保护键</h4><pre><code class="hljs">在IBM360的早期模型中，将内存划分为2Kb的块，每个块被分配一个4位的保护键，保护键存储在CPU的PSW(程序状态字)寄存器中。
+一个运行种的进程如果访问保护键与其PSW码不同的内存，则会捕获这一事件
+</code></pre>
+<h3 id="重定位"><a href="#重定位" class="headerlink" title="重定位"></a>重定位</h3><pre><code class="hljs">虽然基于保护键可以使得程序间隔离，但仍无法解决根本问题，它们运行的指令所引用的都是绝对物理地址，仍然在共享物理空间。这个时候需要每个程序都有一段私有的本地地址来进行内存寻址。
+</code></pre>
+<p><img src="https://hcqpic.oss-cn-shanghai.aliyuncs.com/src%3Dhttp___www.pianshen.com_images_782_ec6e2813d7f1557cf46ce9312eb1e236.png%26refer%3Dhttp___www.pianshen.jpg" srcset="/img/loading.gif" lazyload>   </p>
+<h2 id="地址空间"><a href="#地址空间" class="headerlink" title="地址空间"></a>地址空间</h2><h3 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h3><pre><code class="hljs">要使多个程序运行在内存中并且相互不影响，需要解决两个问题：保护和重定位。基于此创造一种新的存储器抽象：地址空间
+就行进程的概念创造了一类抽象的CPU以运行程序一样，地址空间为程序创建了一种抽象的内存。
+地址空间是一个进程可用于寻址内存的一套地址集合，每个进程都有一个自己的地址空间
+</code></pre>
+<h3 id="基址寄存器和界限寄存器"><a href="#基址寄存器和界限寄存器" class="headerlink" title="基址寄存器和界限寄存器"></a>基址寄存器和界限寄存器</h3><pre><code class="hljs">每个CPU配置有两个特殊的寄存器，通常叫做基底寄存器和界限寄存器，基底寄存器记录了进程的起始物理地址，程序的长度则装载到界限寄存器。
+通过基底寄存器，可以换算出程序访问的实际物理地址，通过界限寄存器可以判断程序是否访问超出界限。
+</code></pre>
+<h3 id="交换技术"><a href="#交换技术" class="headerlink" title="交换技术"></a>交换技术</h3><pre><code class="hljs">理论上如果内存足够大，可以保存所有进程。但实际上，内存往往是有限的，而进程却是在不断增加占用内存，甚至超出内存极限。
+针对内存超载问题，最简单的解决方法是交换，即把一个进程完整的调入内存，使该进程运行一段时间，然后把它存回磁盘。
+</code></pre>
+<p><img src="https://hcqpic.oss-cn-shanghai.aliyuncs.com/5e146d9cbc2edb31bed70512d4655033.gif" srcset="/img/loading.gif" lazyload></p>
+<h3 id="空闲内存管理"><a href="#空闲内存管理" class="headerlink" title="空闲内存管理"></a>空闲内存管理</h3><pre><code class="hljs">在动态分配内存时，操作系统必须对其管理；一般而言有两种方式，一是位图，二是链表
+</code></pre>
+<h4 id="使用位图管理内存"><a href="#使用位图管理内存" class="headerlink" title="使用位图管理内存"></a>使用位图管理内存</h4><pre><code class="hljs">内存可以分配为小到几个字大到几千字节的分配但愿，01标识是否被占有；主要问题是，在分配内存时，分配K个内存单元，需要搜索位图，找到连续的K个0，这是耗时的操作
+</code></pre>
+<h4 id="使用链表管理内存"><a href="#使用链表管理内存" class="headerlink" title="使用链表管理内存"></a>使用链表管理内存</h4><pre><code class="hljs">维护一个记录已分配内存段和空闲内存的链表；其中链表中的一个节点或者表示一个进程，或者表示两个进程间的一块空闲区。
+每个节点都包含以下域：空闲区（H），进程（P）的指示标识，起止地址，长度，和指向下一节点的指针
+</code></pre>
+<ul>
+<li>首次适配算法   为进程分配内存时，沿着链表搜索，直至找到足够大的空闲区，一部分供进程使用，一部分形成新的空闲区</li>
+<li>下次适配算法   记录上一次分配位置，沿着继续搜索</li>
+<li>最佳适配算法   遍历整个链表，找到与所需内存大小适配最佳空闲区</li>
+<li>最快适配算法   维护一个常用大小的空闲区链表，内存分配时，在此链表上搜索</li>
+</ul>
+<h2 id="虚拟内存"><a href="#虚拟内存" class="headerlink" title="虚拟内存"></a>虚拟内存</h2><pre><code class="hljs">基于基底寄存器和界限寄存器的交换技术，给多进程运行提供了便利。
+但随着多媒体时代的到来，程序对内存的需求日渐旺盛，往运行一个程序便要占用1 2G内存。
+这对于多进程运行非常不利，同时交互技术还受阻与磁盘的读写能力，因为一个典型的SATA磁盘的峰值传输速度高达每秒好几百兆，
+这意味需要好几秒才能换入或换出一个程序。
+</code></pre>
+<h3 id="概念-1"><a href="#概念-1" class="headerlink" title="概念"></a>概念</h3><pre><code class="hljs">虚拟内存的基本思想是：每个程序都拥有自己的地址空间，这个空间被分割成多个部分多个块，
+每一块称作一页或页面。每一页有连续的地址范围。这些页都被映射到物理内存，但并不是所有的页都必须在内存中才能运行程序。
+当程序引用到一部分在物理内存中的地址空间时，由硬件立刻执行必要的映射。当程序引用到一部分不在物理内存中的地址空间时，由操作系统负责将缺失的部分装入物理内存并重新执行失败的指令。
+</code></pre>
+<h3 id="分页"><a href="#分页" class="headerlink" title="分页"></a>分页</h3><pre><code class="hljs">程序所引用的地址可以由索引，基底寄存器，段寄存器或其他方式产生，有程序产生的这些地址称为**虚拟地址**，
+它们共同构成一个虚拟地址空间。在没有虚拟内存的计算机上，系统直接把虚拟地址送到内存总线上，读写操作使用具有同样地址的物理内存字。
+而在有虚拟内存的情况下，虚拟地址不是被直接送到内存总线，而是被送到内存管理单元（MMU），mmu把虚拟地址转换为真实物理地址。
+虚拟地址空间按照固定大小划分成称为页面的若干单元。在物理内存中对应的单元称为页框
+</code></pre>
+<p><img src="https://hcqpic.oss-cn-shanghai.aliyuncs.com/u%3D1953053099%2C3134654399%26fm%3D253%26fmt%3Dauto%26app%3D120%26f%3DPNG.webp" srcset="/img/loading.gif" lazyload></p>
+<h4 id="缺页中断"><a href="#缺页中断" class="headerlink" title="缺页中断"></a>缺页中断</h4><pre><code class="hljs">操作系统找到一个很少使用的页框且把它的内容写入磁盘（如果它不在磁盘上）。随后把需要访问的页面读到刚才回收的页框中，修改映射关系，然后重新启动引起陷阱的指令。
+</code></pre>
+<h3 id="页表"><a href="#页表" class="headerlink" title="页表"></a>页表</h3><pre><code class="hljs">作为一种最简单的表现，虚拟地址到物理地址的映射可以概括如下：虚拟地址被分成虚拟页号（高位部分）和偏移量（地位部分）
+虚拟页号可以用作页表的索引，以找到该虚拟页面对应的页表项。由页表项可以找到页框号，然后把页框号拼接到偏移量的高位端，以替换虚拟页号，形成送往内存的物理地址
+</code></pre>
+<p> <img src="https://hcqpic.oss-cn-shanghai.aliyuncs.com/9213b07eca8065380382c7f494dda144ac3482e8.png" srcset="/img/loading.gif" lazyload></p>
+<h4 id="页表项的结构"><a href="#页表项的结构" class="headerlink" title="页表项的结构"></a>页表项的结构</h4><ul>
+<li>保护位 指出一个页允许什么类型的访问，只读只写还是可执行</li>
+<li>修改和访问位 记录是否别修改过，为脏页，需要写入磁盘</li>
+<li>页框号 借此找到物理内存</li>
+<li>在与不在位  借此判断是否发起缺页中断</li>
+</ul>
+<h3 id="加速分页过程"><a href="#加速分页过程" class="headerlink" title="加速分页过程"></a>加速分页过程</h3><p>   一般分页系统面临两个问题</p>
+<ul>
+<li>虚拟地址到物理地址的映射必须非常快  执行一条指令会访问多次页表，如果执行一条指令需要1ns，那么页表查询必须在0.2ns之内完成</li>
+<li>虚拟空间很大，页表也会很大 假设每页4k，32位的地址空间将有100万页，64位则更多</li>
+</ul>
+<h4 id="转换检测缓冲区"><a href="#转换检测缓冲区" class="headerlink" title="转换检测缓冲区"></a>转换检测缓冲区</h4><pre><code class="hljs">基于页表的物理地址转换机制，需要至少访问两次内存，对效率有很大的损耗。基于局部性原理，在计算机中设置一个小型的硬件设备，
+用于直接将虚拟地址映射成物理地址，这种设备称为转换检测缓冲区(TLB),它通常在mmu中，包含少量的表项，当mmu中查不到，才进行页表查询。
+</code></pre>
+<h3 id="针对大内存的页表"><a href="#针对大内存的页表" class="headerlink" title="针对大内存的页表"></a>针对大内存的页表</h3><pre><code class="hljs">TLB能加快虚拟地址到物理地址的转换，但另一个问题是如何处理巨大的虚拟地址空间。
+考虑一个例子，虚拟地址空间为64位，页面大小为4KB，页表项大小为4Bytes，物理内存大小为512MB（参考【1】），如果采用单层页表计算可以得到页表项的数量为，页表项占用的内存大小为Byte。
+显然上述情况下单层页表的实现方式是不现实的
+</code></pre>
+<ul>
+<li>多级页表<br>  多级页表的引入能避免全部页表一直保存在内存中<br>  <img src="https://hcqpic.oss-cn-shanghai.aliyuncs.com/20180111231317615.png" srcset="/img/loading.gif" lazyload></li>
+<li>倒排页表<br>  在这种设计中，在实际内存中每一个页框有一个表项，而不是每一个虚拟页面有一个表项</li>
+</ul>
+<h2 id="页面置换算法"><a href="#页面置换算法" class="headerlink" title="页面置换算法"></a>页面置换算法</h2><pre><code class="hljs">当发生缺页中断时，操作系统必须在内存中选择一个页面将其换出内存，以便为即将调入内存的页面腾出空间；
+如果将要被置换的页面修改过，需要回写磁盘
+没有被修改过，则直接覆盖
+</code></pre>
+<h3 id="最优页面置换算法"><a href="#最优页面置换算法" class="headerlink" title="最优页面置换算法"></a>最优页面置换算法</h3><pre><code class="hljs">在缺页中断发生时，有些页面在内存中，有的页面很快就被访问，有的页面可能10，100，1000条指令之后才会访问，于是优先置换最晚访问的；
+但此算法不可能实现，操作系统无法预知各个页面下一次访问的时间
+</code></pre>
+<h3 id="最近未使用页面置换算法"><a href="#最近未使用页面置换算法" class="headerlink" title="最近未使用页面置换算法"></a>最近未使用页面置换算法</h3><h3 id="先进先出页面置换算法"><a href="#先进先出页面置换算法" class="headerlink" title="先进先出页面置换算法"></a>先进先出页面置换算法</h3><h3 id="第二次机会页面置换算法"><a href="#第二次机会页面置换算法" class="headerlink" title="第二次机会页面置换算法"></a>第二次机会页面置换算法</h3><pre><code class="hljs">FIFO算法可能把经常使用的页面置换出去，对其修改下，检查最老页面的R位，如果它又老又没被使用，则立刻替换它
+</code></pre>
+<h3 id="时间页面置换算法"><a href="#时间页面置换算法" class="headerlink" title="时间页面置换算法"></a>时间页面置换算法</h3><pre><code class="hljs">将所有的页面构造成环形链表，表针指向最老页面。缺页中断时，判断最老页面的R位，是0则淘汰，否则时针下移。
+</code></pre>
+<h3 id="最近最少使用算法"><a href="#最近最少使用算法" class="headerlink" title="最近最少使用算法"></a>最近最少使用算法</h3><pre><code class="hljs">置换出未使用时间最长的页面；使用一个64位的硬件计数器，每次执行完一条指令后加一，在每次访问内存后，将当前的计数值保存在页表项。当缺页中断发生时，找到值最小的一个页面，淘汰它。
+</code></pre>
+<h3 id="工作集页面置换算法"><a href="#工作集页面置换算法" class="headerlink" title="工作集页面置换算法"></a>工作集页面置换算法</h3><pre><code class="hljs">单纯的分页系统中，刚启动进程时，在内存中并没有页面。在CPU试图取第一条指令时就会产生一次缺页中断，使操作系统装入含有第一条指令的页面，按需加载，这种策略叫做请求调页。
+一个进程当前正在使用的页面的集合称为它的工作集。不少分页系统都会设法跟踪进程的工作集，以确保在进程运行以前，，它的工作集就已经在内存中了，这种方法称为工作集模型，其目的在于大大减少缺页中断率。
+在进程运行前预先装入其工作集页面也叫预先调页。
+</code></pre>
+<h3 id="工作集时钟页面置换算法"><a href="#工作集时钟页面置换算法" class="headerlink" title="工作集时钟页面置换算法"></a>工作集时钟页面置换算法</h3><pre><code class="hljs">与时钟算法一样，每次缺页中断时，首先检查指针指向的页面，如果R位被置为1，该页面在当前时钟滴答中就被使用过，那么该页面就不适合被淘汰。然后把该页面的R位置为0，指针指向下一个页面。
+</code></pre>
+<p><img src="https://hcqpic.oss-cn-shanghai.aliyuncs.com/125432206%20%281%29.jpg" srcset="/img/loading.gif" lazyload></p>
+<h3 id="页面置换算法小结"><a href="#页面置换算法小结" class="headerlink" title="页面置换算法小结"></a>页面置换算法小结</h3><table>
+<thead>
+<tr>
+<th align="left">算法</th>
+<th align="left">注释</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">最优算法</td>
+<td align="left">不可实现，但可用作基准</td>
+</tr>
+<tr>
+<td align="left">NRU（最近未使用算法）</td>
+<td align="left">LRU的很粗糙的近似</td>
+</tr>
+<tr>
+<td align="left">FIFO算法</td>
+<td align="left">可能抛弃重要的页面</td>
+</tr>
+<tr>
+<td align="left">第二次机会算法</td>
+<td align="left">比FIFO有较大的改善</td>
+</tr>
+<tr>
+<td align="left">时钟算法</td>
+<td align="left">现实的</td>
+</tr>
+<tr>
+<td align="left">LRU（最近最少使用）算法</td>
+<td align="left">很优秀，但很难实现</td>
+</tr>
+<tr>
+<td align="left">NFO（最不经常使用）算法</td>
+<td align="left">LRU的相对粗略的近似</td>
+</tr>
+<tr>
+<td align="left">老化算法</td>
+<td align="left">非常近似lru的有效算法</td>
+</tr>
+<tr>
+<td align="left">工作集算法</td>
+<td align="left">实现起来开销很大</td>
+</tr>
+<tr>
+<td align="left">工作集时钟算法</td>
+<td align="left">好的有效算法</td>
+</tr>
+</tbody></table>
+<h2 id="分页系统中的设计问题"><a href="#分页系统中的设计问题" class="headerlink" title="分页系统中的设计问题"></a>分页系统中的设计问题</h2><h3 id="局部分配策略和全局分配策略"><a href="#局部分配策略和全局分配策略" class="headerlink" title="局部分配策略和全局分配策略"></a>局部分配策略和全局分配策略</h3><pre><code class="hljs">发生缺页中断时需要选择合适的页面置换算法，另一个问题是如何在相互竞争的可运行进程间分配内存
+</code></pre>
+<ul>
+<li><p>局部分配策略</p>
+<p>即每次内存分配在进程从属的工作集中进行页面置换，但会导致过于颠簸</p>
+</li>
+<li><p>全局分配策略</p>
+<p>即在内存中全局搜索进行页面置换，但需要不断动态确认每个进程分配多少页框</p>
+<p><strong>PFF</strong>（缺页中断率）算法，它指出了何时减少或增加进程的页面，但却完全没有说明在缺页中断时应该替换哪一个页面</p>
+</li>
+</ul>
+<h3 id="负载控制"><a href="#负载控制" class="headerlink" title="负载控制"></a>负载控制</h3><p>   即使使用最优页面置换算法并对进程采用理想的全局页框分配，系统还是可能发生颠簸。事实上，一旦所有进程的组合工作集超出内存容量，就可能发生颠簸<br>   在这种情况下，没有办法能够在不影响其他进程的情况下满足那些需要更多内存的进程的需要。唯一现实的解决办法就是暂时从内存中去掉一些进程<br>   减少进程竞争内存的方法是暂时交换出部分进程到磁盘。另一方面，也要考虑多道程序设计的道数，当内存中的进程过低时，CPU空转。</p>
+<h3 id="页面大小"><a href="#页面大小" class="headerlink" title="页面大小"></a>页面大小</h3><pre><code class="hljs">在现实情况中，随便选择一个正文段，数据段往往很可能没有填充满整个页面，这个称为内部碎片，为了减少内部碎片对空间的浪费，小页面更佳
+另一方面，小页面意味着更大的页表，内存与磁盘之间的传输一般是一次一页，传输过程中大部分时间都花在寻道和旋转延迟上
+所以传输小页面和大页面的所用时间基本是相同的，同样内存需求大小，小页面意味着需要更多传输时间
+此外小页面能充分的利用TLB空间
+</code></pre>
+<h3 id="分离的指令空间和数据空间"><a href="#分离的指令空间和数据空间" class="headerlink" title="分离的指令空间和数据空间"></a>分离的指令空间和数据空间</h3><pre><code class="hljs">地址空间足够大时，一切都好；然而往往是地址空间不够用，这时候需要做程序与数据空间的隔离
+</code></pre>
+<h3 id="共享页面"><a href="#共享页面" class="headerlink" title="共享页面"></a>共享页面</h3><pre><code class="hljs">在多道程序设计系统中，几个不同的用户同时运行同一个程序是很常见的事；显然为了避免在内存中一个页面多个副本，共享页面效率更高。
+这里存在一个问题，即不是所有的页面都适合共享，那些只读的（例如程序文本）可以共享，而那些数据页面则不能共享
+</code></pre>
+<p><img src="https://hcqpic.oss-cn-shanghai.aliyuncs.com/wKioL1l6vk7DZI_TAAAynwGcvmQ133.jpg" srcset="/img/loading.gif" lazyload></p>
+<h3 id="共享库"><a href="#共享库" class="headerlink" title="共享库"></a>共享库</h3><pre><code class="hljs">在现代操作系统中，有很多大型库被众多进程使用；例如处理浏览文件以便打开文件的对话框的库，和多个图形库。
+把所有的这些库静态地与磁盘上的每一个可执行程序绑定在一起，将会使它们变得更佳庞大。
+一个更加通用的技术是使用共享库（在windows中称作dll或动态链接库）
+任何在目标文件中被调用了但是没有被定义的函数，都被称为未定义内部函数。链接器会在库中寻址这些未定义的外部函数。
+如果找到了，则将他们加载到可执行二进制文件中
+</code></pre>
+<h3 id="内存映射文件"><a href="#内存映射文件" class="headerlink" title="内存映射文件"></a>内存映射文件</h3><pre><code class="hljs">共享库实际上是一种更为同样的机制——内存映射文件 的一个特例。这种机制的思想是：进程可以通过发起一个系统调用，将一个文件映射到其虚拟地址空间的一部分
+在多数系统实现中，在映射共享的页面时不会实际的读入页面的内容，而是在访问页面时才会被每次一页的读入
+</code></pre>
+<h3 id="清除策略"><a href="#清除策略" class="headerlink" title="清除策略"></a>清除策略</h3><pre><code class="hljs">如果发生缺页中断时系统中有大量的空闲页框，此时分页系统工作在最佳状态。如果每个页框都被占用，而且被修改过的话，再换入一个新的页面时，旧页面应首先被写回磁盘。
+为保证有足够的空闲页框，很多分页系统有一个称为分页守护进程的后台进程，定时被唤醒来检查内存的状况
+</code></pre>
+<h3 id="虚拟内存接口"><a href="#虚拟内存接口" class="headerlink" title="虚拟内存接口"></a>虚拟内存接口</h3><pre><code class="hljs">通过让一个进程把一片内存区域的名称通知给另一个进程，而使得另一个进程可以把这piano区域映射到它的虚拟地址空间中去
+</code></pre>
+<h2 id="有关实现的问题"><a href="#有关实现的问题" class="headerlink" title="有关实现的问题"></a>有关实现的问题</h2><h3 id="与分页有关的工作"><a href="#与分页有关的工作" class="headerlink" title="与分页有关的工作"></a>与分页有关的工作</h3><ul>
+<li>进程创建时<ul>
+<li>确定程序和数据初始值，并创建页表</li>
+<li>在内存在为页表分配空间并初始化</li>
+<li>在磁盘交换区分配空间，以便在一个进程换出时有放置此进程的空间</li>
+<li>用程序正文和数据对交换区进行初始化</li>
+<li>在进程表中存储页表和磁盘交换区信息</li>
+</ul>
+</li>
+<li>进程执行时<ul>
+<li>为新进程重置MMU，刷新TLB</li>
+<li>新进程页表必须成为当前页表</li>
+<li>装入进程的部分会全部页面，以减少缺页中断</li>
+</ul>
+</li>
+<li>缺页中断时<ul>
+<li>通过读寄存器来确定是哪个虚拟地址造成缺页中断</li>
+<li>在磁盘上找到定位对应页面</li>
+<li>找到合适页框存放新页面，必要时置换老的页面</li>
+<li>回退程序计数器，使程序计数器指向引发缺页中断的指令，重新执行指令</li>
+</ul>
+</li>
+<li>进程终止时<ul>
+<li>释放进程的页表，页面和页面在硬盘上所占的空间。如果某些页面是和其他进程共享，则需要等到最后一个共享它的进程终止，才可以释放</li>
+</ul>
+</li>
+</ul>
+<h3 id="缺页中断的处理"><a href="#缺页中断的处理" class="headerlink" title="缺页中断的处理"></a>缺页中断的处理</h3><ul>
+<li>硬件陷入内核，在堆栈中保存程序计数器</li>
+<li>启动一个汇编代码例程保存通用寄存器和其他易失信息，以免被操作系统破坏、这个例程将操作系统作为一个函数调用</li>
+<li>当操作系统发现一个缺页中断时，尝试发现需要哪个虚拟页面</li>
+<li>一旦获取到发生缺页中断的虚拟地址，操作系统检查这个地址是否有效，并检查存取与保护是否一致</li>
+<li>如果选择的页框脏了，安排该页写回磁盘，并发生一次上下文切换，挂起产生缺页中断的进程，让其他进程运行直至磁盘传输解释。无论如何，该页框标记为忙，以免被其他进程占用</li>
+<li>一旦页干净后，操作系统查找所需页面在磁盘上的地址</li>
+<li>通过磁盘将其载入。该页面正在载入时，产生缺页中断的进程仍然被挂起，并且如果有其他进程，则选择一个用户进程运行</li>
+<li>当磁盘中断发生时，表明该页已经被装入，页表可能已经更新可以反映它的位置，页框也被标记为正常状态</li>
+<li>恢复发生缺页中断指令一起的状态，程序计数器重新指向该指令</li>
+<li>调度引发缺页中断的进程，操作系统返回调用它的例程</li>
+<li>该例程恢复寄存器和其他状态信息，返回到用户空间继续执行，就好像缺页中断没有发生一样</li>
+</ul>
+<h3 id="指令备份"><a href="#指令备份" class="headerlink" title="指令备份"></a>指令备份</h3><pre><code class="hljs">当程序访问不在内存中页面时，引起缺页中断的指令会半途停止并引发操作系统的陷阱，在操作系统取出所需的页面后，
+它需要重启引起陷阱的指令。但这并不是一件容易实现的事。
+通过隐藏的内部寄存器，在执行每条指令之前，把程序计数器的内存复制到该寄存器
+</code></pre>
+<h3 id="锁定内存中的页面"><a href="#锁定内存中的页面" class="headerlink" title="锁定内存中的页面"></a>锁定内存中的页面</h3><pre><code class="hljs">如果某个进程在等待IO时被挂起,而另一个进程被运行执行，而这个进程产生一个缺页中断。如果分页算法是全局算法，包含IO缓冲区的页面有很小的机会被选中换出内存
+一种方式是锁住正在IO操作的内存中的页面以确保不被换出内存
+另一种方式是在内核缓冲区完成所有的IO操作，然后再将其复制到用户页面。
+</code></pre>
+<h3 id="后备存储"><a href="#后备存储" class="headerlink" title="后备存储"></a>后备存储</h3><pre><code class="hljs">页面置换算法描述了如何换出内存中的页面，却没有讨论页面换出后放置在哪。
+</code></pre>
+<h3 id="策略和机制的分离"><a href="#策略和机制的分离" class="headerlink" title="策略和机制的分离"></a>策略和机制的分离</h3><pre><code class="hljs">在控制系统复杂度的一种重要方法就是把策略从机制中分离出来。
+</code></pre>
+<p><img src="https://hcqpic.oss-cn-shanghai.aliyuncs.com/252137255185626.jpg" srcset="/img/loading.gif" lazyload></p>
+<p>其中存储管理系统被分为三部分：</p>
+<ul>
+<li>一个底层MMU处理程序</li>
+<li>一个作为内核一部分的缺页中断程序</li>
+<li>一个运行在用户空间的外部页面调度程序</li>
+</ul>
+<p>优点：</p>
+<ul>
+<li>减轻系统复杂度</li>
+<li>更多的模块化代码和适应性（类似于微服务）</li>
+</ul>
+<p>缺点：</p>
+<ul>
+<li>多次交叉边界 ，带来额外开销</li>
+<li>模块间消息传递所造成的额外开销</li>
+</ul>
+<h2 id="分段"><a href="#分段" class="headerlink" title="分段"></a>分段</h2><p>虚拟内存时一维的，虚拟地址是从0到最大地址，一个地址接着一个地址；对于许多问题来说，有两个或多个独立的地址空间可能比只有一个要好得多。<br>比如一个编译器在编译过程中会建立好多表，其中可能包括：</p>
+<ul>
+<li>被保存起来供打印清单用的源程序正文（用于批处理系统）</li>
+<li>符号表，包含变量的名字和属性</li>
+<li>包含用到的所有整型量和浮点常量的表</li>
+<li>语法分析树，包含程序语法分析的结果</li>
+<li>编译器内部过程调用使用的堆栈</li>
+</ul>
+<p>前面4张表会随着编译的进行不断增大，而堆栈的数据也会变化，现在的问题就是，每一张表的大小都不确定，那么如何指定每一张表在虚拟内存空间的地址呢？</p>
+<p><img src="https://hcqpic.oss-cn-shanghai.aliyuncs.com/%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87_20220112234601.png" srcset="/img/loading.gif" lazyload></p>
+<p>如上图，没一张表都有自己的起始地址，但是当变量很多的时候，符号表需要的空间可能会超过程序正文的起始地址，<br>这个时候就会把源程序的表的地址覆盖掉。当然编译器没有这么傻，它可以提示无法继续编译，当然这样并不合适，另一个办法就是拿出一部分没有使用的空间给符号表。造成这个问题的原因就是分页系统中的虚拟地址是一维的，所以在编译过程中必须给变量，代码分配虚拟地址。这个有点类似没有采用分页之前，进程之间使用物理地址导致相互覆盖的问题。</p>
+<p><img src="https://hcqpic.oss-cn-shanghai.aliyuncs.com/%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87_20220112234959.png" srcset="/img/loading.gif" lazyload><br>所以我们可以为不同的表分配自己的空间地址，也就是分段，这样他们地址都是相对地址，全部编译完成后确定了每张表的大小，就可以计算出实际的虚拟地址了。</p>
+<h3 id="分段的作用"><a href="#分段的作用" class="headerlink" title="分段的作用"></a>分段的作用</h3><ul>
+<li><strong>解决编译问题</strong>： 前面提到过在编译时地址覆盖的问题，可以通过分段来解决，从而简化编译程序</li>
+<li><strong>重新编译</strong>： 因为不同类型的数据在不同的段中，但其中一个段进行修改后，就不需要所有的段都重新进行编译。</li>
+<li><strong>内存共享</strong>： 对内存分段，可以很容易把其中的代码段或数据段共享给其他程序，分页中因为数据代码混合在一个页面中，所以不便于共享。</li>
+<li><strong>安全性</strong>： 将内存分为不同的段之后，因为不同段的内容类型不同，所以他们能进行的操作也不同，比如代码段的内容被加载后就不应该允许写的操作，因为这样会改变程序的行为。而在分页系统中，因为一个页不是一个逻辑实体，代码和数据可能混合在一起，无法进行安全上的控制</li>
+<li><strong>动态链接</strong>： 动态链接是指在作业运行之前，并不把几个目标程序段链接起来。要运行时，先将主程序所对应的目标程序装入内存并启动运行，当运行过程中又需要调用某段时，才将该段(目标程序)调入内存并进行链接。可见，动态链接也要求以段作为管理的单位</li>
+<li><strong>保持兼容性</strong></li>
+</ul>
+<h3 id="纯分段的实现"><a href="#纯分段的实现" class="headerlink" title="纯分段的实现"></a>纯分段的实现</h3><pre><code class="hljs">分段和分页的实现本质是不同的。页面时定长而段不是
+</code></pre>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/">#操作系统</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>内存管理</div>
+      <div>https://hfate.github.io/2022/12/09/内存管理/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>Author</div>
+          <div>HCQ</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>Posted on</div>
+          <div>December 9, 2022</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>Licensed under</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - Attribution">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2022/12/09/java%E6%80%A7%E8%83%BD%E8%B0%83%E4%BC%98%E6%8C%87%E5%8C%97/" title="Java性能调优指北">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Java性能调优指北</span>
+                        <span class="visible-mobile">Previous</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;Table of Contents</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">Search</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">Keyword</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">Blog works best with JavaScript enabled</div>
+  </noscript>
+</body>
+</html>
